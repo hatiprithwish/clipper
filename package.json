@@ -1,0 +1,11 @@
+{
+  "name": "clipper",
+  "version": "1.0.0",
+  "description": "A video sharing platform with tweets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Prithwish Hati",
+  "license": "ISC"
+}
