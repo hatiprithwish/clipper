@@ -18,4 +18,9 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" })); // to handle url
 app.use(express.static("public")); // for storing static files in public folder
 app.use(cookieParser()); // to use CRUD ops securely in browser cookies
 
+//import routes
+import userRouter from "./routes/user.routes.js";
+
+//routes declaration
+app.use("/api/v1/users", userRouter);
 export default app;
