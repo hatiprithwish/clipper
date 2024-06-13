@@ -223,3 +223,22 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, error.message || "Can't refresh tokens");
   }
 });
+
+export const upatePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body; // these are showing invalid
+  console.log(req.body, oldPassword, newPassword);
+
+  const user = await User.findById(req.user?._id);
+  console.log(user);
+  const isOldPasswordValid = await user.isPasswordCorrect(oldPassword);
+  if (!isOldPasswordValid) {
+    throw new ApiError(401, "Old Password is incorrect");
+  }
+
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password updated successfully"));
+});
