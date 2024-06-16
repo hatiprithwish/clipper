@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 export const registerUser = asyncHandler(async (req, res) => {
   //S1: get user details from frontend
@@ -398,4 +399,62 @@ export const getUserChannelProfile = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, "Channel Data fetched successfully"));
+});
+
+export const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id), // req.user._id is a string, not exactly mongoDB objectId. because we are using mongoose, it's taking care of it. But aggregation pipelines work directly with MongoDB hence we need to convert it into mongoDB objectId. That's why we are doing new mongoose ...
+      },
+    },
+    {
+      $lookup: {
+        // get video ids from videos
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              // getting owner id of each video
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  // getting only neccessary values of owner from user model
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              // to make owner an object instead of keeping it an array
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "Fetched watch history successfully"
+      )
+    );
 });

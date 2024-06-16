@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getUserChannelProfile,
+  getWatchHistory,
   loginUser,
   logoutUser,
   refreshAccessToken,
@@ -45,6 +46,7 @@ router
     upload.fields([{ name: "coverImage", maxCount: 1 }]),
     updateUserCoverImage
   );
+router.route("/watch-history").post(verifyJWT, getWatchHistory);
 router.route("/:username").post(getUserChannelProfile);
 
 export default router;
