@@ -47,7 +47,10 @@ export const registerUser = asyncHandler(async (req, res) => {
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
   if (!avatar) {
-    throw new ApiError(400, "Avatar file is required");
+    throw new ApiError(
+      400,
+      "Something went wrong while uploading avatar to cloudinary"
+    );
   }
 
   //S6: create user object - entry in db
@@ -61,7 +64,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   });
 
   //S7: remove password & refresh token field from response
-  //find newly created user and remove password & refreshToken from it as they are unnecessary to store in db
+  //find newly created user and remove password & refreshToken from it as they are unnecessary to send to frontend
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
@@ -398,7 +401,9 @@ export const getUserChannelProfile = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Channel Data fetched successfully"));
+    .json(
+      new ApiResponse(200, channel[0], "Channel Data fetched successfully")
+    );
 });
 
 export const getWatchHistory = asyncHandler(async (req, res) => {
