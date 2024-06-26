@@ -108,7 +108,7 @@ export const loginUser = asyncHandler(async (req, res) => {
 
   const { email, username, password } = req.body;
 
-  if (!username && !email) {
+  if (!username) {
     throw new ApiError(400, "Username or email required");
   }
 
@@ -207,10 +207,10 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 
     const { newAccessToken, newRefreshToken } =
       await generateAccessTokenAndRefreshToken(user._id);
-
+    console.log(newAccessToken, newRefreshToken);
     return res
       .status(200)
-      .cookie("Access Token", accessToken, options)
+      .cookie("Access Token", newAccessToken, options)
       .cookie("Refresh Token", newRefreshToken, options)
       .json(
         new ApiResponse(
@@ -249,7 +249,7 @@ export const upatePassword = asyncHandler(async (req, res) => {
 export const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
-    .json(ApiResponse(200, req.user, "Fetched current user successfully"));
+    .json(new ApiResponse(200, req.user, "Fetched current user successfully"));
 });
 
 export const updateUserDetails = asyncHandler(async (req, res) => {
@@ -281,12 +281,18 @@ export const updateUserDetails = asyncHandler(async (req, res) => {
 });
 
 export const updateUserAvatar = asyncHandler(async (req, res) => {
-  const avatarLocalPath = req.files.avatar[0].path;
+  const avatarLocalPath = req.file?.path;
+
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar file is missing");
+  }
+
+  //TODO: delete old image - assignment
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
 
-  if (!avatar) {
-    throw new ApiError(500, "Failed to upload avatar to cloudinary");
+  if (!avatar.url) {
+    throw new ApiError(400, "Error while uploading on avatar");
   }
 
   const user = await User.findByIdAndUpdate(
@@ -297,15 +303,15 @@ export const updateUserAvatar = asyncHandler(async (req, res) => {
       },
     },
     { new: true }
-  ).select("-password -refreshToken");
+  ).select("-password");
 
   return res
     .status(200)
-    .json(new ApiResponse(200, user, "Avatar url updated successfully"));
+    .json(new ApiResponse(200, user, "Avatar image updated successfully"));
 });
 
 export const updateUserCoverImage = asyncHandler(async (req, res) => {
-  const coverImageLocalPath = req.files.coverImage[0].path;
+  const coverImageLocalPath = req.file?.path;
 
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
